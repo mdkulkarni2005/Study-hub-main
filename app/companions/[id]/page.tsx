@@ -1,22 +1,24 @@
-import { getCompanion } from "@/lib/actions/companion.actions"
-import { getSubjectColor } from "@/lib/utils"
-import { currentUser } from "@clerk/nextjs/server"
-import Image from "next/image"
-import { redirect } from "next/navigation"
+import {getCompanion} from "@/lib/actions/companion.actions";
+import {currentUser} from "@clerk/nextjs/server";
+import {redirect} from "next/navigation";
+import {getSubjectColor} from "@/lib/utils";
+import Image from "next/image";
+import CompanionComponent from "@/components/CompanionComponent";
 
 interface CompanionSessionPageProps {
-    params: Promise<{id: string}>
+    params: Promise<{ id: string}>;
 }
 
 const CompanionSession = async ({ params }: CompanionSessionPageProps) => {
+    const { id } = await params;
+    const companion = await getCompanion(id);
+    const user = await currentUser();
 
-    const {id} = await params
-    const { name, subject, title, topic, duration } = await getCompanion(id)
-    const user = await currentUser()
+    const { name, subject, title, topic, duration } = companion;
 
-    if(!user) redirect('/sign-in')
+    if(!user) redirect('/sign-in');
     if(!name) redirect('/companions')
-    
+
     return (
         <main>
             <article className="flex rounded-border justify-between p-6 max-md:flex-col">
@@ -41,6 +43,13 @@ const CompanionSession = async ({ params }: CompanionSessionPageProps) => {
                     {duration} minutes
                 </div>
             </article>
+
+            <CompanionComponent
+                {...companion}
+                companionId={id}
+                userName={user.firstName!}
+                userImage={user.imageUrl!}
+            />
         </main>
     )
 }
